@@ -23,3 +23,16 @@ def test_details():
 
 def test_page():
     assert "Fantasy Art Automation" in client.get("/demo").text
+
+
+def test_trace_events():
+    j = client.post("/demo/sync/server_error").json()
+    kinds = [e["kind"] for e in j["events"]]
+    assert kinds.count("bad") == 2 and kinds.count("wait") == 2 and kinds[-1] == "good"
+    assert j["simulated_seconds"] == 1.5 and j["waits_seconds"] == [0.5, 1.0]
+    r = client.post("/demo/sync/revoked_token").json()
+    assert r["events"][-1]["kind"] == "alert" and r["attempts"] == 1
+
+
+def test_unknown_scenario_404():
+    assert client.post("/demo/sync/nope").status_code == 404

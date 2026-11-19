@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantasy Art Automation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f6f7f9; --surface:#fff; --fg:#14181f; --muted:#5b6575; --line:#dde1e8;
+  --accent:#2f5fd0; --accent-fg:#fff;
+  --ok:#17803d; --ok-bg:#e3f4e9; --warn:#a35a00; --warn-bg:#fdf0d8; --bad:#b4261f; --bad-bg:#fbe5e3;
+  --code-bg:#0f141c; --code-fg:#cfe3ff;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e1218; --surface:#161b24; --fg:#e8ecf2; --muted:#97a2b4; --line:#272f3c;
+  --accent:#7ea2ff; --accent-fg:#0e1218;
+  --ok:#5fd28a; --ok-bg:#12281c; --warn:#f0b457; --warn-bg:#2c2110; --bad:#ff8a80; --bad-bg:#2e1614;
+  --code-bg:#080b10; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;padding:40px 16px 64px}
+main{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1,h2{font-family:var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:clamp(30px,6vw,44px);line-height:1.1}
+h2{font-size:21px}
+p{margin:0}
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted);font-size:18px;max-width:62ch;margin-top:12px}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.btn{display:inline-block;padding:9px 15px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);text-decoration:none;font-weight:500;font-size:15px}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:6px;vertical-align:1px}
+.dot.up{background:var(--ok)} .dot.down{background:var(--bad)}
+.note{border-left:3px solid var(--warn);background:var(--warn-bg);padding:12px 16px;border-radius:0 6px 6px 0;font-size:15px}
+.sim{display:grid;grid-template-columns:minmax(0,270px) minmax(0,1fr);gap:16px;margin-top:14px}
+@media(max-width:680px){.sim{grid-template-columns:minmax(0,1fr)}}
+.picks{display:flex;flex-direction:column;gap:8px}
+.picks button{font:inherit;text-align:left;padding:10px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.picks button:hover{border-color:var(--accent)}
+.picks button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.picks small{display:block;color:var(--muted);font-size:13px}
+.panel{background:var(--code-bg);color:var(--code-fg);border-radius:8px;padding:16px;font-family:var(--mono);font-size:13px;min-height:300px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.result{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{padding:3px 10px;border-radius:99px;font-weight:500}
+.pill.ok{background:#12381f;color:#7ee2a0} .pill.fail{background:#3a1715;color:#ff9a90}
+.stat{color:#9fb0c8} .stat b{color:#e8ecf2}
+.trace{display:flex;flex-direction:column;gap:2px;overflow-x:auto}
+.e{display:grid;grid-template-columns:62px 14px minmax(0,1fr);gap:8px;padding:3px 0;opacity:0;transform:translateY(4px);animation:in .25s forwards}
+.e .t{color:#6f7d93} .e .m{white-space:pre-wrap}
+.e.good .k,.e.good .m{color:#7ee2a0} .e.bad .k,.e.bad .m{color:#ff9a90}
+.e.wait .k,.e.wait .m{color:#f0c674} .e.alert .k,.e.alert .m{color:#ffb3ab;font-weight:500}
+.e.info .k{color:#6f7d93}
+@keyframes in{to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.e{animation:none;opacity:1;transform:none}}
+details{font-size:12px;color:#9fb0c8} summary{cursor:pointer}
+details pre{margin:8px 0 0;white-space:pre-wrap;word-break:break-word;color:#cfe3ff}
+.err{color:#ff9a90}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card b{display:block;margin-bottom:4px} .card span{color:var(--muted);font-size:14px}
+footer{color:var(--muted);font-size:14px}
+code{font-family:var(--mono);font-size:.9em}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="label">Live backend demo</div>
+    <h1 style="margin-top:8px">Fantasy Art Automation</h1>
+    <p class="lead">Keeps a fantasy-art Etsy shop syncing on its own: renews Etsy access tokens before they expire and recovers from API failures without a person stepping in.</p>
+    <div class="links">
+      <a class="btn primary" href="https://github.com/anhzudeptrai2/fantasy-art-automation" target="_blank" rel="noopener">Source on GitHub</a>
+      <a class="btn" href="/docs">API reference</a>
+    </div>
+  </header>
+
+  <div class="status" id="status"><span><span class="dot" id="dot"></span><span id="health">checking API…</span></span><span>version 0.1.0</span><span>Etsy: simulated</span></div>
+
+  <div class="note"><b>What you are seeing:</b> each button calls this server, which runs the real token manager and sync worker against a simulated Etsy. Waits are simulated, so results appear instantly. No live Etsy shop is connected yet.</div>
+
+  <section>
+    <h2>Pick a situation</h2>
+    <div class="sim">
+      <div class="picks" id="picks" role="group" aria-label="Scenarios"></div>
+      <div class="panel" aria-live="polite">
+        <div class="result" id="result"><span class="stat">Loading scenarios…</span></div>
+        <div class="trace" id="trace"></div>
+        <details><summary>Raw API response</summary><pre id="raw"></pre></details>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Recovery rules shown above</h2>
+    <div class="grid">
+      <div class="card"><b>Refresh before expiry</b><span>Tokens are renewed 60 s early. The rotated refresh token is saved; a failed refresh keeps the old one.</span></div>
+      <div class="card"><b>Back off on errors</b><span>Etsy 5xx: wait 0.5 s, 1 s, 2 s between attempts, up to 4 attempts.</span></div>
+      <div class="card"><b>Respect rate limits</b><span>Etsy 429: wait exactly as long as its <code>Retry-After</code> header says.</span></div>
+      <div class="card"><b>Know when to stop</b><span>A revoked login is never retried. Persistent failure raises an alert for an operator.</span></div>
+    </div>
+  </section>
+
+  <footer>Python 3.11 · FastAPI · pytest · GitHub Actions · Docker</footer>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const ICON = {info:"·", good:"✓", bad:"✕", wait:"…", alert:"!"};
+
+fetch("/health").then(r => r.json()).then(h => {
+  $("dot").className = "dot up"; $("health").textContent = "API healthy";
+}).catch(() => { $("dot").className = "dot down"; $("health").textContent = "API unreachable"; });
+
+function row(e, i) {
+  const d = document.createElement("div");
+  d.className = "e " + e.kind; d.style.animationDelay = (i * 70) + "ms";
+  const t = document.createElement("span"); t.className = "t"; t.textContent = "t+" + e.t.toFixed(1) + "s";
+  const k = document.createElement("span"); k.className = "k"; k.textContent = ICON[e.kind] || "·";
+  const m = document.createElement("span"); m.className = "m"; m.textContent = e.text;
+  d.append(t, k, m); return d;
+}
+
+function stat(label, value) {
+  const s = document.createElement("span"); s.className = "stat";
+  s.append(label + ": "); const b = document.createElement("b"); b.textContent = value; s.append(b); return s;
+}
+
+async function run(key) {
+  document.querySelectorAll(".picks button").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === key));
+  $("trace").replaceChildren(); $("result").replaceChildren(stat("running", key));
+  try {
+    const r = await fetch("/demo/sync/" + key, {method: "POST"});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    const pill = document.createElement("span");
+    pill.className = "pill " + (j.ok ? "ok" : "fail");
+    pill.textContent = j.ok ? "recovered" : "stopped safely";
+    $("result").replaceChildren(pill, stat("attempts", j.attempts), stat("token refreshes", j.token_refreshes),
+      stat("alerts", j.alerts.length), stat("simulated time", j.simulated_seconds + "s"));
+    $("trace").replaceChildren(...j.events.map(row));
+    $("raw").textContent = JSON.stringify(j, null, 2);
+  } catch (err) {
+    const e = document.createElement("span"); e.className = "err";
+    e.textContent = "Could not reach the demo API (" + err.message + "). Is the server running?";
+    $("result").replaceChildren(e);
+  }
+}
+
+fetch("/demo/scenarios").then(r => r.json()).then(sc => {
+  for (const [k, v] of Object.entries(sc)) {
+    const b = document.createElement("button");
+    b.dataset.k = k; b.setAttribute("aria-pressed", "false");
+    const t = document.createElement("b"); t.textContent = v.title;
+    const s = document.createElement("small"); s.textContent = v.desc;
+    b.append(t, s); b.onclick = () => run(k); $("picks").append(b);
+  }
+  run("server_error");
+}).catch(() => { $("result").replaceChildren(stat("error", "could not load scenarios")); });
+</script>
+</body>
+</html>

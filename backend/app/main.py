@@ -30,7 +30,7 @@ app.include_router(demo_router)
 
 @app.get("/")
 def root():
-    return {"project": "Fantasy Art Automation", "version": "0.1.0", "status": "development"}
+    return {"project": "Fantasy Art Automation", "version": "0.1.0", "status": "development", "demo": "/demo"}
 
 
 @app.get("/health")
