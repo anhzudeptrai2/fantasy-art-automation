@@ -32,3 +32,6 @@ docker compose up --build
 
 ## Security
 Never commit `.env`, API keys or tokens. Token files live in `.secrets/` (git-ignored). Set `ETSY_MOCK=false` and `ETSY_CLIENT_ID` for the real API.
+
+## Maintenance with Devin
+See [docs/devin.md](docs/devin.md).
