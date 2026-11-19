@@ -35,3 +35,9 @@ Never commit `.env`, API keys or tokens. Token files live in `.secrets/` (git-ig
 
 ## Maintenance with Devin
 See [docs/devin.md](docs/devin.md).
+
+## Live demo (mock Etsy, no credentials needed)
+```bash
+python -m uvicorn backend.app.main:app
+```
+Open http://127.0.0.1:8000/demo and click a scenario: expired token auto-refresh, 5xx retry with backoff, 429 rate limit, full outage (alert), revoked token (no retry, alert). Same endpoints are in `/docs`.

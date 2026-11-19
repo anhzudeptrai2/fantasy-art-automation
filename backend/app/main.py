@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from fastapi import FastAPI, HTTPException
 
+from backend.app.demo import router as demo_router
 from backend.app.integrations.etsy import EtsyAPIError, EtsyClient, MockEtsyClient
 from backend.app.services.token_manager import FileTokenStore, InMemoryTokenStore, Token, TokenManager
 
@@ -24,6 +25,7 @@ def build_token_manager() -> TokenManager:
 
 
 app.state.token_manager = build_token_manager()
+app.include_router(demo_router)
 
 
 @app.get("/")
